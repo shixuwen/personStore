@@ -23,56 +23,11 @@ export default {
 
 ### 2、src/api文件层次结构：
 * 能力/模块/业务 保持三级目录结构
-* 命名小写、中杠隔开、文件后面需要带service、命名保持两个单词+service
-``` ts
-如：api/incident/incident-appealdetails-service.ts
-```
-
+* 命名小写
 
 ### 3、文件内引用分级，需要使用Shift+Alt +F 调整格式
-* node_modules基础引用
-* @gsafety包引用
-* 模块引用
-
-``` js
-例如：
-import i18n from '@/lang';
-import store from '@/store';
-import * as httpClient from '@gsafety/vue-httpclient/dist/httpclient';
-import { formatToIndex } from '@gsafety/cad-gutil';
-import { stringFormat, stringFormatArr } from '@gsafety/cad-gutil';
-import { incidentDisposalUrl } from '@/common/url/incident/incident-disposal-url';
-import { TimeSheetInfo } from '@/common/models/incident/time-sheet/time-sheet-info';
-import { TimeSheetBindInfo } from '@/common/models/incident/time-sheet/time-sheet-bind-info';
-```
-
 
 ### 4、common/events ，所有的事件名定义都存放在这一个文件中，命名大写
-``` js
-例如：
-// 警情
-
-/*
-*  警情详情发布
-*/
-const INCIDENT_DETAILS_PUBLISH = 'INCIDENT_DETAILS_PUBLISH';
-/**
- * 警情信息
- */
-const INCIDENT_DETAILS = 'INCIDENT_DETAILS';
-
-/**
- * 处警事件聚合器
- */
-export const DisposalEvents = {
-  INCIDENT_DETAILS_PUBLISH,
-  INCIDENT_DETAILS
-};
-
-
-
-// 转警
-``` 
 
 ### 5、common/filters，用功能命名，平铺在filters文件夹下,文件的内容对应文件的名称。
 ``` js
@@ -139,46 +94,10 @@ if (...) { ... } else if (...) { ...} else { ...}
 
 #### 17. 目录及组件命名  
 
-* 目录名及组件文件名应有意义, 且尽量简短, 如:
-
-```
-/incident/incident-detail/incident-detail.vue
-/api/incident/time-sheet-service.ts  这里为了使文件名尽量简短, 所以就没有命名为incident-time-sheet-service.ts, 因为父目录已经叫incident了, 从路径上是可以知道这个文件的用途的
-```
-
-* 组件class名和文件文件名严格一致(class名大驼峰, 文件名 - 分隔), 如:
-
-```
-shift-change.vue
-
-@Component
-export default class ShiftChange extends Vue {
-```
-
-* 组件文件如果存在父目录, 且父目录下有且仅有当前一个子组件(今后确定不会增加) , 这时候组件文件名应该和父目录名保持一致, 如:
-
-```
-|--- shift-change
-|------ shift-change.scss
-|------ shift-change.vue
-```
-
-*  如同一目录下存在多个兄弟组件, 此时子组件可以根据情况考虑是否携带父目录名, 如
-
-```
-|--- untreated-list
-|------ center-untreated-list.scss
-|------ center-untreated-list.vue
-|------ seat-untreated-list.scss
-|------ seat-untreated-list.vue
-
-|--- layout
-|------ navbar.scss
-|------ navbar.vue
-|------ sidebar.scss
-|------ sidebar.vue
-```
-
+* 目录名及组件文件名应有意义, 且尽量简短
+* 组件class名和文件文件名严格一致(class名大驼峰, 文件名 - 分隔)
+* 组件文件如果存在父目录, 且父目录下有且仅有当前一个子组件(今后确定不会增加) , 这时候组件文件名应该和父目录名保持一致
+*  如同一目录下存在多个兄弟组件, 此时子组件可以根据情况考虑是否携带父目录名
 * views目录和components目录区别, views目录主要存放跟路由有关组件(即路由里面配置的所有组件), components里面放非路由组件
 
 #### 18. 路由命名  
@@ -186,61 +105,7 @@ export default class ShiftChange extends Vue {
 * 组件引入使用按需加载，需要注明webpackChunkName，引入时定义的名称和组件class名相同
 * 路由路径名采用rest风格, 多个单词使用 - 连接;
 * 当为多级路由, 且父路由仅用于加载Layout布局时, 其path名应该同子组件的父目录名一致;
-
-```
-  {
-    path: '/incident',  // 警情相关, 由于此处path对应的组件为Layout,仅加载布局用,所以为了和下面的子路由产生一定的关联性,这里使用父级目录名incident作为path
-    component: Layout,
-    redirect: 'noredirect',
-    name: 'Incident',
-    icon: 'zujian',
-    hidden: true,
-    children: [
-      {
-        path: 'incident-detail',  // 警情详情, 对应目录名incident-detail
-        component: () => import(/* webpackChunkName: "IncidentDetail" */  '../views/incident/incident-detail/incident-detail.vue'),
-        name: 'IncidentDetail',
-        icon: 'wujiaoxing',
-        children: [
-          {
-            path: 'appeal-details', // 接警详情, 对应目录名appeal-details
-            component: () => import(/* webpackChunkName: "AppealDetails" */  '../views/incident/appeal-details/appeal-details.vue'),
-            name: 'AppealDetails',
-            icon: 'wujiaoxing'
-          }
-        ]
-      }
-    ]
-  },
-```
-
-* 路由的name命名为大驼峰, 其后缀正常应该与路由的Path保持一致, 如:
-
-```
-  {
-    path: '/incident-wait',
-    name: 'IncidentWait',  // name后缀同path一致,大驼峰命名
-    component: () => import(/* webpackChunkName: "IncidentWait" */ '../views/incident/incident-wait/incident-wait.vue'),
-    hidden: true
-  },
-  {
-    path: '/untreated-list', // 待处理列表,仅用于加载Layout布局,所以采用子路由组件的父目录名作为path
-    component: Layout,
-    redirect: 'noredirect',
-    name: 'UntreatedList',
-    icon: 'zujian',
-    children: [
-      {
-        path: 'center', // 本中心未完成, 最后一级组件名如和上一级有重复, 则路由路径可以考虑去掉重复路径名, 例如此处使用center, 而未使用center-untreated-list
-        // 此处untreated-list下面会有多个组件,需要配多个路由,所以这里在组件前加了center前缀作区分
-        // 如果untreated-list目录下只有一个路由,那么这里path可以命名为 'index' ,然后该路由组件class类名/组件文件名应同父目录名(untreated-list)保持一致(文件名也可取名index.vue)
-        component: () => import(/* webpackChunkName: "CenterUntreatedList" */ '@/views/incident/untreated-list/center-untreated-list.vue'),
-        name: 'CenterUntreatedList',
-        icon: 'wujiaoxing'
-      }
-    ]
-  },
-```
+* 路由的name命名为大驼峰, 其后缀正常应该与路由的Path保持一致
 
 #### 19. 开发顺序(重要)
 
