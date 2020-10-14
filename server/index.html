@@ -40,19 +40,19 @@
     // ctx.beginPath()
     // ctx.fillStyle = 'blue'
     // ctx.fillRect(20, 20, 50, 50)
-  const canvas = document.querySelector('.canvas');
-  if (canvas.getContext) {
-    const ctx = canvas.getContext('2d');
-    ctx.beginPath();
-    ctx.moveTo(50, 50);
-    ctx.lineTo(100, 50);
-    ctx.lineTo(100, 100);
-    ctx.stroke();
+  // const canvas = document.querySelector('.canvas');
+  // if (canvas.getContext) {
+  //   const ctx = canvas.getContext('2d');
+  //   ctx.beginPath();
+  //   ctx.moveTo(50, 50);
+  //   ctx.lineTo(100, 50);
+  //   ctx.lineTo(100, 100);
+  //   ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(50, 50);
-    ctx.quadraticCurveTo(100, 50, 100, 100); // 没有指定半径，绘制的圆弧必须过这个控制点
-    ctx.stroke();
+  //   ctx.beginPath();
+  //   ctx.moveTo(50, 50);
+  //   ctx.quadraticCurveTo(100, 50, 100, 100); // 没有指定半径，绘制的圆弧必须过这个控制点
+  //   ctx.stroke();
     // ctx.beginPath();
     // canvas.addEventListener('mousedown', function(e) {
     //   e = e || window.event;
@@ -70,6 +70,90 @@
     //     }
     //   }
     // });
+  // }
+  const canvas = document.querySelector('.canvas');
+  if (canvas.getContext) {
+    const ctx = canvas.getContext('2d');
+
+    ctx.save();
+    ctx.fillStyle = 'pink';
+
+    ctx.beginPath();
+    ctx.fillRect(0, 0, 100,100);
+
+    ctx.restore();
+    const image = new Image();
+    image.src = './image.png'; 
+    image.onload = function() {
+      canvas.width = image.width * 2;
+      canvas.height = image.height; 
+      draw();
+    }
+
+    function draw() {
+      ctx.drawImage(image, 0, 0, image.width, image.height);
+      const oldImageData = ctx.getImageData(0, 0, image.width, image.height);
+      // 根据 oldImageData 数据的修改成
+      // let newImageData = ctx.createImageData(image.width, image.height);
+      // 1. 选取马赛克矩形
+      // 2. 从马赛克矩形中随机抽出一个像素点的信息(rgba)
+      // 3. 将整个马赛克矩形中的像素点信息统一调成随机抽取的那个(2中的)
+    //   const size = 5;
+    //   for (let i = 0; i < oldImageData.width/size;i++) {
+    //     // 列的马赛克矩形
+    //     for (let j = 0; j < oldImageData.height/size;j++) {
+    //       // (i, j) 每一个马赛克矩形的坐标
+    //       /*
+    //         (0, 0)  (0, 0) - (4, 4)    (1, 0)  (5, 0) - (9, 4)
+    //         (0, 1)  (0, 5) - (4, 9)    (1, 1)  (5, 5) - (9, 9)
+    //       */
+    //      // Math.random ---> [0, 1)
+    //      const color = getPXInfo(oldImageData, Math.floor(Math.random()*size + size*i), Math.floor(Math.random()*size + size*j));
+    //      // 循环每一个马赛克矩形  将整个马赛克矩形中的像素点信息统一调成随机抽取的那个(2中的)
+    //      for (let a = 0; a < size; a++) {
+    //         for (let b = 0; b < size; b++) {
+    //           newImageData = setPXInfo(newImageData, size * i + a, size * j + b, color);
+    //         }
+    //      }
+    //     }
+    //   }
+    //   ctx.putImageData(newImageData, image.width, 0);
+    }
+  }
+
+  // 给定偏移量拿像素点的信息
+  function getPXInfo (imageData, x, y) {
+    const color = [];
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const theFirst = (y * width) + x; // 当前像素前面有多少个像素点
+    // r
+    color[0] = data[theFirst * 4];
+    // g
+    color[1] = data[theFirst * 4 + 1];
+    // b
+    color[2] = data[theFirst * 4 + 2];
+    //a
+    color[3] = data[theFirst * 4 + 3];
+
+    return color;
+  }
+
+  function setPXInfo (imageData, x, y, color) {
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const theFirst = (y * width) + x; // 当前像素前面有多少个像素点
+    // r
+    data[theFirst * 4] = color[0];
+    // g
+    data[theFirst * 4 + 1] = color[1];
+    // b
+    data[theFirst * 4 + 2] = color[2];
+    //a
+    data[theFirst * 4 + 3] = color[3];
+    return imageData;
   }
   </script>
 </html>
