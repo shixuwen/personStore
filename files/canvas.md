@@ -317,3 +317,150 @@ ctx.fillText('hello world', 150, 150);
 
 ## 像素操作
 
+* getImageData() 获取一个含画布场景像素数据的imageData对象
+* 注意： canvas的getImgeData()方法在chrome浏览器读取画布上指定区域的像素数据时，如果获取的是图片信息，图片需放到服务器上，不然会报跨域
+
+``` js
+/** 
+ * @param sx 将要被提取的图形像素数据的左上角的x坐标
+ * @param sy 将要被提取的图形像素数据的左上角的y坐标
+ * @param sw 将要被提取的图形像素数据的width
+ * @param sh 将要被提取的图形像素数据的height
+*/
+const imageData = ctx.getImageData(sx, sy, sw,sh)
+/** 
+ * @desc 以上方法会返回一个imgaeData对象
+ * @param width 横向像素的个数
+ * @param height 纵向像素的个数
+ * @param data 一组像素的数组，包含rgba的信息
+ *              [r: 0, g: 0, b: 0, a: 0, r: 0, g: 0, b: 0, a: 0, r: 0, g: 0, b: 0, a: 0]
+*/
+
+const imageData = ctx.getImageData(0, 0, 10, 10)
+console.log(imageData.width) // 10
+console.log(imageData.height) // 10
+console.log(imageData.data) // [0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0 ...]
+```
+* putImageData() 修改画布对象位置的内容
+
+```js 
+
+  putImageData(myImageData, dx, dy)
+
+  /**
+   * @param myImageData 参数表示获取到需要变更的内容的对象
+   * @param dx 参数表示在场景内左上角绘制的像素所得到的设备坐标
+   * @param dy 参数表示在场景内左上角绘制的像素所得到的设备坐标
+  */
+  ctx.fillRect(0, 0, 50, 50); // 默认绘制的矩形是黑色
+  const imageData = ctx.getImageData(0, 0, 50, 50); // 获取场景矩形的像素数据
+  
+  for (let i = 0; i < imageData.data.length; i++) {
+    const r = i*4;
+    const g = i*4 + 1;
+    const b = i*4 + 2;
+    const a = i*4 + 3;
+    imageData.data[r] = 100; 
+  }
+  ctx.putImageData(imageData, 0, 0); // 修改了场景所有像素点G为100变成了酒红色
+
+```
+
+### example 马赛克
+
+```js 
+const canvas = document.querySelector('canvas');
+  if (canvas.getContext) {
+    const ctx = canvas.getContext('2d');
+
+    ctx.save();
+    ctx.fillStyle = 'pink';
+
+    ctx.beginPath();
+    ctx.fillRect(0, 0, 100,100);
+
+    ctx.restore();
+    const image = new Image();
+    image.src = './image.jpeg'; 
+    image.onload = function() {
+      canvas.width = image.width * 2;
+      canvas.height = image.height; 
+      draw();
+    }
+
+    function draw() {
+      ctx.drawImage(image, 0, 0, image.width, image.height);
+      const oldImageData = ctx.getImageData(0, 0, image.width, image.height);
+      // 根据 oldImageData 数据的修改成
+      let newImageData = ctx.createImageData(image.width, image.height);
+      // 1. 选取马赛克矩形
+      // 2. 从马赛克矩形中随机抽出一个像素点的信息(rgba)
+      // 3. 将整个马赛克矩形中的像素点信息统一调成随机抽取的那个(2中的)
+      const size = 5;
+      for (let i = 0; i < oldImageData.width/size;i++) {
+        // 列的马赛克矩形
+        for (let j = 0; j < oldImageData.height/size;j++) {
+          // (i, j) 每一个马赛克矩形的坐标
+          /*
+            (0, 0)  (0, 0) - (4, 4)    (1, 0)  (5, 0) - (9, 4)
+            (0, 1)  (0, 5) - (4, 9)    (1, 1)  (5, 5) - (9, 9)
+          */
+         // Math.random ---> [0, 1)
+         const color = getPXInfo(oldImageData, Math.floor(Math.random()*size + size*i), Math.floor(Math.random()*size + size*j));
+         // 循环每一个马赛克矩形  将整个马赛克矩形中的像素点信息统一调成随机抽取的那个(2中的)
+         for (let a = 0; a < size; a++) {
+            for (let b = 0; b < size; b++) {
+              newImageData = setPXInfo(newImageData, size * i + a, size * j + b, color);
+            }
+         }
+        }
+      }
+      ctx.putImageData(newImageData, image.width, 0);
+    }
+  }
+
+  // 给定偏移量拿像素点的信息
+  function getPXInfo (imageData, x, y) {
+    const color = [];
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const theFirst = (y * width) + x; // 当前像素前面有多少个像素点
+    // r
+    color[0] = data[theFirst * 4];
+    // g
+    color[1] = data[theFirst * 4 + 1];
+    // b
+    color[2] = data[theFirst * 4 + 2];
+    //a
+    color[3] = data[theFirst * 4 + 3];
+
+    return color;
+  }
+
+  function setPXInfo (imageData, x, y, color) {
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const theFirst = (y * width) + x; // 当前像素前面有多少个像素点
+    // r
+    data[theFirst * 4] = color[0];
+    // g
+    data[theFirst * 4 + 1] = color[1];
+    // b
+    data[theFirst * 4 + 2] = color[2];
+    //a
+    data[theFirst * 4 + 3] = color[3];
+    return imageData;
+  }
+```
+
+## canvas的优化
+
+* 尽量避免浮点数的坐标，以整数取代。 用Math.floor()取整
+
+* 不要用drawImage时缩放图像。最好缓存好图片的不同尺寸，再用drawImage引用
+
+* 当canvas场景复杂时，可用多层画布去渲染。即将整块画布，分成多块
+
+* 当canvas模糊时，可根据dpr放大，缩小来调整像素清晰度
